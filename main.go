@@ -3,11 +3,13 @@ package main
 import (
 	"net/http"
 
+	"example.com/event-booking-api/db"
 	"example.com/event-booking-api/models"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
+	db.InitDB()
 	server := gin.Default()
 
 	server.GET("/ping", pongHandler)
@@ -24,7 +26,13 @@ func pongHandler(c *gin.Context) {
 }
 
 func getEventsHandler(c *gin.Context) {
-	events := models.GetAllEvents()
+	events, err := models.GetAllEvents()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to retrieve events",
+		})
+		return
+	}
 	c.JSON(http.StatusOK, events)
 }
 
@@ -34,7 +42,7 @@ func createEventHandler(c *gin.Context) {
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
+			"error": "Invalid request payload",
 		})
 		return
 	}
@@ -42,7 +50,14 @@ func createEventHandler(c *gin.Context) {
 	event.ID = 1     // Placeholder for ID assignment
 	event.UserID = 1 // Placeholder for UserID assignment
 
-	event.Save()
+	err = event.Save()
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to create event",
+		})
+		return
+	}
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Event created successfully",
