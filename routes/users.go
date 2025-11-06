@@ -59,7 +59,7 @@ func userLoginHandler(c *gin.Context) {
 		return
 	}
 
-	token, err := utils.GenerateToken(user.Email, user.ID)
+	token, err := utils.GenerateToken(user.Email, user.ID, user.Role)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to generate token",
@@ -78,6 +78,15 @@ func updateUserHandler(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Invalid user ID",
+		})
+		return
+	}
+
+	tokenUserID := c.GetInt64("userID")
+	role := c.GetString("role")
+	if tokenUserID != userID && role != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{
+			"error": "You are not authorized to update this user",
 		})
 		return
 	}
@@ -133,6 +142,15 @@ func getUserHandler(c *gin.Context) {
 		return
 	}
 
+	tokenUserID := c.GetInt64("userID")
+	role := c.GetString("role")
+	if tokenUserID != userID && role != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{
+			"error": "You are not authorized to view this user",
+		})
+		return
+	}
+
 	user, err := models.GetUserByID(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -149,6 +167,15 @@ func deleteUserHandler(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Invalid user ID",
+		})
+		return
+	}
+
+	role := c.GetString("role")
+	tokenUserID := c.GetInt64("userID")
+	if userID != tokenUserID && role != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{
+			"error": "You are not authorized to delete this user",
 		})
 		return
 	}
@@ -171,5 +198,50 @@ func deleteUserHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "User deleted successfully",
+	})
+}
+
+func updateUserRoleHandler(c *gin.Context) {
+	userID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid user ID",
+		})
+		return
+	}
+
+	user, err := models.GetUserByID(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to retrieve user",
+		})
+		return
+	}
+
+	var payload struct {
+		Role string `json:"role"`
+	}
+
+	err = c.ShouldBindJSON(&payload)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid request payload",
+		})
+		return
+	}
+
+	user.Role = payload.Role
+
+	err = user.Update()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to update user role",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "User role updated successfully",
+		"user":    user,
 	})
 }

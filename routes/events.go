@@ -79,7 +79,6 @@ func updateEventHandler(c *gin.Context) {
 		return
 	}
 
-	userID := c.GetInt64("userID")
 	event, err := models.GetEventByID(eventId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -88,7 +87,10 @@ func updateEventHandler(c *gin.Context) {
 		return
 	}
 
-	if event.UserID != userID {
+	userID := c.GetInt64("userID")
+	role := c.GetString("role")
+
+	if event.UserID != userID && role != "admin" {
 		c.JSON(http.StatusForbidden, gin.H{
 			"error": "You are not authorized to update this event",
 		})
@@ -129,7 +131,6 @@ func deleteEventHandler(c *gin.Context) {
 		return
 	}
 
-	userID := c.GetInt64("userID")
 	event, err := models.GetEventByID(eventId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -138,7 +139,10 @@ func deleteEventHandler(c *gin.Context) {
 		return
 	}
 
-	if event.UserID != userID {
+	userID := c.GetInt64("userID")
+	role := c.GetString("role")
+
+	if event.UserID != userID && role != "admin" {
 		c.JSON(http.StatusForbidden, gin.H{
 			"error": "You are not authorized to delete this event",
 		})

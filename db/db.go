@@ -27,7 +27,8 @@ func createTables() {
 	createUsersTableSQL := `CREATE TABLE IF NOT EXISTS users (
 		"id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 		"email" TEXT NOT NULL UNIQUE,
-		"password" TEXT NOT NULL
+		"password" TEXT NOT NULL,
+		"role" TEXT NOT NULL DEFAULT 'user'
 	);`
 	_, err := DB.Exec(createUsersTableSQL)
 	if err != nil {

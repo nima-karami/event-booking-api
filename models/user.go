@@ -9,6 +9,7 @@ type User struct {
 	ID       int64  `json:"id"`
 	Email    string `json:"email" binding:"required"`
 	Password string `json:"password" binding:"required"`
+	Role     string `json:"role"`
 }
 
 func (u *User) Save() error {
@@ -17,7 +18,7 @@ func (u *User) Save() error {
 		return err
 	}
 
-	query := `INSERT INTO users (email, password) VALUES (?, ?)`
+	query := `INSERT INTO users (email, password, role) VALUES (?, ?, 'user')`
 	result, err := db.DB.Exec(query, u.Email, hashedPassword)
 	if err != nil {
 		return err
@@ -41,11 +42,11 @@ func (u *User) Delete() error {
 }
 
 func (u *User) Authenticate() error {
-	query := `SELECT id, password FROM users WHERE email = ?`
+	query := `SELECT id, password, role FROM users WHERE email = ?`
 	row := db.DB.QueryRow(query, u.Email)
 
 	var storedHashedPassword string
-	err := row.Scan(&u.ID, &storedHashedPassword)
+	err := row.Scan(&u.ID, &storedHashedPassword, &u.Role)
 	if err != nil {
 		return err
 	}
@@ -80,7 +81,7 @@ func GetUserByID(id int64) (*User, error) {
 	row := db.DB.QueryRow(query, id)
 
 	var u User
-	err := row.Scan(&u.ID, &u.Email, &u.Password)
+	err := row.Scan(&u.ID, &u.Email, &u.Password, &u.Role)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +94,7 @@ func GetUserByEmail(email string) (*User, error) {
 	row := db.DB.QueryRow(query, email)
 
 	var u User
-	err := row.Scan(&u.ID, &u.Email, &u.Password)
+	err := row.Scan(&u.ID, &u.Email, &u.Password, &u.Role)
 	if err != nil {
 		return nil, err
 	}
