@@ -15,18 +15,10 @@ type Event struct {
 	UserID      int       `json:"user_id"`
 }
 
-var events = []Event{}
-
 func (e *Event) Save() error {
 	query := `INSERT INTO events (title, description, location, date, user_id) VALUES (?, ?, ?, ?, ?)`
-	stmt, err := db.DB.Prepare(query)
-	if err != nil {
-		return err
-	}
 
-	defer stmt.Close()
-
-	result, err := stmt.Exec(e.Title, e.Description, e.Location, e.Date, e.UserID)
+	result, err := db.DB.Exec(query, e.Title, e.Description, e.Location, e.Date, e.UserID)
 	if err != nil {
 		return err
 	}
@@ -57,4 +49,17 @@ func GetAllEvents() ([]Event, error) {
 	}
 
 	return events, nil
+}
+
+func GetEventByID(id int64) (*Event, error) {
+	query := `SELECT * FROM events WHERE id = ?`
+	row := db.DB.QueryRow(query, id)
+
+	var e Event
+	err := row.Scan(&e.ID, &e.Title, &e.Description, &e.Location, &e.Date, &e.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &e, nil
 }
