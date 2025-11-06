@@ -52,7 +52,8 @@ func createEventHandler(c *gin.Context) {
 		return
 	}
 
-	event.UserID = 1 // Placeholder for UserID assignment
+	userID := c.GetInt64("userID")
+	event.UserID = userID
 
 	err = event.Save()
 
@@ -78,10 +79,18 @@ func updateEventHandler(c *gin.Context) {
 		return
 	}
 
-	_, err = models.GetEventByID(eventId)
+	userID := c.GetInt64("userID")
+	event, err := models.GetEventByID(eventId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to retrieve event",
+		})
+		return
+	}
+
+	if event.UserID != userID {
+		c.JSON(http.StatusForbidden, gin.H{
+			"error": "You are not authorized to update this event",
 		})
 		return
 	}
@@ -120,10 +129,18 @@ func deleteEventHandler(c *gin.Context) {
 		return
 	}
 
+	userID := c.GetInt64("userID")
 	event, err := models.GetEventByID(eventId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to retrieve event",
+		})
+		return
+	}
+
+	if event.UserID != userID {
+		c.JSON(http.StatusForbidden, gin.H{
+			"error": "You are not authorized to delete this event",
 		})
 		return
 	}
@@ -138,5 +155,67 @@ func deleteEventHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Event deleted successfully",
+	})
+}
+
+func registerEventHandler(c *gin.Context) {
+	eventId, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid event ID",
+		})
+		return
+	}
+
+	event, err := models.GetEventByID(eventId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to retrieve event",
+		})
+		return
+	}
+
+	userID := c.GetInt64("userID")
+	err = event.Register(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to register for event",
+		})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"message": "Successfully registered for event",
+	})
+}
+
+func unregisterEventHandler(c *gin.Context) {
+	eventId, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid event ID",
+		})
+		return
+	}
+
+	event, err := models.GetEventByID(eventId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to retrieve event",
+		})
+		return
+	}
+
+	userID := c.GetInt64("userID")
+	err = event.Unregister(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to unregister from event",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Successfully unregistered from event",
 	})
 }

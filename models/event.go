@@ -12,7 +12,7 @@ type Event struct {
 	Description string    `json:"description" binding:"required"`
 	Location    string    `json:"location" binding:"required"`
 	Date        time.Time `json:"date" binding:"required"`
-	UserID      int       `json:"user_id"`
+	UserID      int64     `json:"user_id"`
 }
 
 func (e *Event) Save() error {
@@ -39,6 +39,18 @@ func (e *Event) Update() error {
 func (e *Event) Delete() error {
 	query := `DELETE FROM events WHERE id = ?`
 	_, err := db.DB.Exec(query, e.ID)
+	return err
+}
+
+func (e *Event) Register(userID int64) error {
+	query := `INSERT INTO registrations (user_id, event_id) VALUES (?, ?)`
+	_, err := db.DB.Exec(query, userID, e.ID)
+	return err
+}
+
+func (e *Event) Unregister(userID int64) error {
+	query := `DELETE FROM registrations WHERE user_id = ? AND event_id = ?`
+	_, err := db.DB.Exec(query, userID, e.ID)
 	return err
 }
 

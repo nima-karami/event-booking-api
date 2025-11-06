@@ -66,7 +66,7 @@ func userLoginHandler(c *gin.Context) {
 }
 
 func updateUserHandler(c *gin.Context) {
-	userId, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	userID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Invalid user ID",
@@ -74,7 +74,7 @@ func updateUserHandler(c *gin.Context) {
 		return
 	}
 
-	user, err := models.GetUserByID(userId)
+	user, err := models.GetUserByID(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to retrieve user",
@@ -117,7 +117,7 @@ func getUsersHandler(c *gin.Context) {
 }
 
 func getUserHandler(c *gin.Context) {
-	userId, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	userID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Invalid user ID",
@@ -125,7 +125,7 @@ func getUserHandler(c *gin.Context) {
 		return
 	}
 
-	user, err := models.GetUserByID(userId)
+	user, err := models.GetUserByID(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to retrieve user",
@@ -137,7 +137,7 @@ func getUserHandler(c *gin.Context) {
 }
 
 func deleteUserHandler(c *gin.Context) {
-	userId, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	userID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Invalid user ID",
@@ -145,7 +145,7 @@ func deleteUserHandler(c *gin.Context) {
 		return
 	}
 
-	user, err := models.GetUserByID(userId)
+	user, err := models.GetUserByID(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to retrieve user",
