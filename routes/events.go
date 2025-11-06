@@ -68,3 +68,75 @@ func createEventHandler(c *gin.Context) {
 		"event":   event,
 	})
 }
+
+func updateEventHandler(c *gin.Context) {
+	eventId, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid event ID",
+		})
+		return
+	}
+
+	_, err = models.GetEventByID(eventId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to retrieve event",
+		})
+		return
+	}
+
+	updatedEvent := models.Event{}
+	err = c.ShouldBindJSON(&updatedEvent)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid request payload",
+		})
+		return
+	}
+
+	updatedEvent.ID = eventId
+
+	err = updatedEvent.Update()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to update event",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Event updated successfully",
+		"event":   updatedEvent,
+	})
+}
+
+func deleteEventHandler(c *gin.Context) {
+	eventId, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid event ID",
+		})
+		return
+	}
+
+	event, err := models.GetEventByID(eventId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to retrieve event",
+		})
+		return
+	}
+
+	err = event.Delete()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to delete event",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Event deleted successfully",
+	})
+}
