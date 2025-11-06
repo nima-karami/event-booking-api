@@ -219,3 +219,23 @@ func unregisterEventHandler(c *gin.Context) {
 		"message": "Successfully unregistered from event",
 	})
 }
+
+func getEventRegistrationsHandler(c *gin.Context) {
+	eventId, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid event ID",
+		})
+		return
+	}
+
+	registrations, err := models.GetRegistrationsByEventIDWithUsers(eventId)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to retrieve registrations",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, registrations)
+}
