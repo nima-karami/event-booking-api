@@ -1,6 +1,6 @@
 # Database files
-# *.db
-# api.db
+*.db
+api.db
 
 # Binaries
 *.exe
