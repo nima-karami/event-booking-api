@@ -19,6 +19,14 @@ func userSignupHandler(c *gin.Context) {
 		return
 	}
 
+	_, err = models.GetUserByEmail(user.Email)
+	if err == nil {
+		c.JSON(http.StatusConflict, gin.H{
+			"error": "User with this email already exists",
+		})
+		return
+	}
+
 	err = user.Save()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{

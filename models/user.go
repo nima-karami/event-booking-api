@@ -87,3 +87,16 @@ func GetUserByID(id int64) (*User, error) {
 
 	return &u, nil
 }
+
+func GetUserByEmail(email string) (*User, error) {
+	query := `SELECT * FROM users WHERE email = ?`
+	row := db.DB.QueryRow(query, email)
+
+	var u User
+	err := row.Scan(&u.ID, &u.Email, &u.Password)
+	if err != nil {
+		return nil, err
+	}
+
+	return &u, nil
+}

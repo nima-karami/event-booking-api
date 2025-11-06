@@ -4,3 +4,7 @@ api.db
 
 # Binaries
 *.exe
+
+# Air
+tmp/
+.air.toml
