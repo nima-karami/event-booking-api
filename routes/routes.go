@@ -31,7 +31,7 @@ func RegisterRoutes(server *gin.Engine) {
 
 	// Admin-only routes
 	admin := authenticated.Group("/admin")
-	admin.Use(middlewares.Authenticate, middlewares.IsAdmin())
+	admin.Use(middlewares.Authenticate, middlewares.AuthorizeAdmin)
 	admin.GET("/users", getUsersHandler)
 	admin.PUT("/users/:id/role", updateUserRoleHandler)
 }

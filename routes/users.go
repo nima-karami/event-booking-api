@@ -130,7 +130,12 @@ func getUsersHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, users)
+	sanitizedUsers := make([]*models.PublicUser, len(users))
+	for i, user := range users {
+		sanitizedUsers[i] = user.ToPublic()
+	}
+
+	c.JSON(http.StatusOK, sanitizedUsers)
 }
 
 func getUserHandler(c *gin.Context) {
@@ -159,7 +164,9 @@ func getUserHandler(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, user)
+	sanitizedUser := user.ToPublic()
+
+	c.JSON(http.StatusOK, sanitizedUser)
 }
 
 func deleteUserHandler(c *gin.Context) {

@@ -12,6 +12,12 @@ type User struct {
 	Role     string `json:"role"`
 }
 
+type PublicUser struct {
+	ID    int64  `json:"id"`
+	Email string `json:"email"`
+	Role  string `json:"role"`
+}
+
 func (u *User) Save() error {
 	hashedPassword, err := utils.HashPassword(u.Password)
 	if err != nil {
@@ -46,12 +52,20 @@ func (u *User) Authenticate() error {
 	row := db.DB.QueryRow(query, u.Email)
 
 	var storedHashedPassword string
-	err := row.Scan(&u.ID, &storedHashedPassword, &u.Role)
+	err := row.Scan(&u.ID, &storedHashedPassword)
 	if err != nil {
 		return err
 	}
 
 	return utils.CheckPasswordHash(u.Password, storedHashedPassword)
+}
+
+func (u *User) ToPublic() *PublicUser {
+	return &PublicUser{
+		ID:    u.ID,
+		Email: u.Email,
+		Role:  u.Role,
+	}
 }
 
 func GetAllUsers() ([]User, error) {
@@ -66,7 +80,7 @@ func GetAllUsers() ([]User, error) {
 	users := []User{}
 	for rows.Next() {
 		var u User
-		err := rows.Scan(&u.ID, &u.Email, &u.Password)
+		err := rows.Scan(&u.ID, &u.Email, &u.Password, &u.Role)
 		if err != nil {
 			return nil, err
 		}
