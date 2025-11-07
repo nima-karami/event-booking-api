@@ -24,8 +24,9 @@ func (u *User) Save() error {
 		return err
 	}
 
-	query := `INSERT INTO users (email, password, role) VALUES (?, ?, 'user')`
-	result, err := db.DB.Exec(query, u.Email, hashedPassword)
+	query := `INSERT INTO users (email, password, role) VALUES (?, ?, ?)`
+	u.Role = "user" // Default role
+	result, err := db.DB.Exec(query, u.Email, hashedPassword, u.Role)
 	if err != nil {
 		return err
 	}
@@ -52,7 +53,7 @@ func (u *User) Authenticate() error {
 	row := db.DB.QueryRow(query, u.Email)
 
 	var storedHashedPassword string
-	err := row.Scan(&u.ID, &storedHashedPassword)
+	err := row.Scan(&u.ID, &storedHashedPassword, &u.Role)
 	if err != nil {
 		return err
 	}

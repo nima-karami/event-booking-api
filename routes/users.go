@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -29,6 +30,7 @@ func userSignupHandler(c *gin.Context) {
 
 	err = user.Save()
 	if err != nil {
+		fmt.Println("Error saving user:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": "Failed to create user",
 		})
@@ -53,6 +55,7 @@ func userLoginHandler(c *gin.Context) {
 
 	err = user.Authenticate()
 	if err != nil {
+		fmt.Println("Authentication error:", err)
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error": "Authentication failed",
 		})

@@ -9,11 +9,16 @@ func RegisterRoutes(server *gin.Engine) {
 	server.POST("/users/signup", userSignupHandler)
 	server.POST("/users/login", userLoginHandler)
 
+	// Temporary routes for testing without authentication
+	server.GET("/users", getUsersHandler)
+	server.GET("/events", getEventsHandler)
+
+	// Protected routes
 	authenticated := server.Group("/")
 	authenticated.Use(middlewares.Authenticate)
 
 	// Event routes
-	authenticated.GET("/events", getEventsHandler)
+	// authenticated.GET("/events", getEventsHandler)
 	authenticated.POST("/events", createEventHandler)
 	authenticated.GET("/events/:id", getEventHandler)
 	authenticated.PUT("/events/:id", updateEventHandler)
