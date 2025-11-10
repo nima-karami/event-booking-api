@@ -2,9 +2,9 @@ package utils
 
 import (
 	"errors"
-	"os"
 	"time"
 
+	"example.com/event-booking-api/utils"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -59,7 +59,7 @@ func VerifyToken(tokenString string) (userID int64, role string, err error) {
 }
 
 func getSecretKey() string {
-	secret := os.Getenv("JWT_SECRET")
+	secret := utils.GetEnvString("JWT_SECRET", "")
 	if secret == "" {
 		panic("JWT_SECRET environment variable not set")
 	}
