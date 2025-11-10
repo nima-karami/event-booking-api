@@ -24,32 +24,26 @@ func (u *User) Save() error {
 		return err
 	}
 
-	query := `INSERT INTO users (email, password, role) VALUES (?, ?, ?)`
+	query := `INSERT INTO users (email, password, role) VALUES ($1, $2, $3) RETURNING id`
 	u.Role = "user" // Default role
-	result, err := db.DB.Exec(query, u.Email, hashedPassword, u.Role)
-	if err != nil {
-		return err
-	}
-
-	id, err := result.LastInsertId()
-	u.ID = id
+	err = db.DB.QueryRow(query, u.Email, hashedPassword, u.Role).Scan(&u.ID)
 	return err
 }
 
 func (u *User) Update() error {
-	query := `UPDATE users SET email = ?, password = ? WHERE id = ?`
+	query := `UPDATE users SET email = $1, password = $2 WHERE id = $3`
 	_, err := db.DB.Exec(query, u.Email, u.Password, u.ID)
 	return err
 }
 
 func (u *User) Delete() error {
-	query := `DELETE FROM users WHERE id = ?`
+	query := `DELETE FROM users WHERE id = $1`
 	_, err := db.DB.Exec(query, u.ID)
 	return err
 }
 
 func (u *User) Authenticate() error {
-	query := `SELECT id, password, role FROM users WHERE email = ?`
+	query := "SELECT id, password FROM users WHERE email = $1"
 	row := db.DB.QueryRow(query, u.Email)
 
 	var storedHashedPassword string
@@ -92,7 +86,7 @@ func GetAllUsers() ([]User, error) {
 }
 
 func GetUserByID(id int64) (*User, error) {
-	query := `SELECT * FROM users WHERE id = ?`
+	query := `SELECT * FROM users WHERE id = $1`
 	row := db.DB.QueryRow(query, id)
 
 	var u User
@@ -105,7 +99,7 @@ func GetUserByID(id int64) (*User, error) {
 }
 
 func GetUserByEmail(email string) (*User, error) {
-	query := `SELECT * FROM users WHERE email = ?`
+	query := `SELECT * FROM users WHERE email = $1`
 	row := db.DB.QueryRow(query, email)
 
 	var u User

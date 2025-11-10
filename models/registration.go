@@ -14,7 +14,7 @@ func GetRegistrationsByEventIDWithUsers(eventID int64) ([]RegistrationWithUser, 
         SELECT r.id, r.user_id, r.event_id, u.email 
         FROM registrations r
         JOIN users u ON r.user_id = u.id
-        WHERE r.event_id = ?
+        WHERE r.event_id = $1
     `
 	rows, err := db.DB.Query(query, eventID)
 	if err != nil {
