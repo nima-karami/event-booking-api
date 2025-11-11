@@ -5,6 +5,9 @@ import (
 	"fmt"
 
 	"example.com/event-booking-api/utils"
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/lib/pq"
 )
 
@@ -49,60 +52,46 @@ func InitDB() {
 		"port", port,
 		"database", dbname)
 
-	createTables()
+	runMigrations(connStr)
 }
 
-func createTables() {
-	utils.Logger.Debug("Creating database tables if not exist")
+func runMigrations(connStr string) {
+	utils.Logger.Info("Running database migrations")
 
-	createUsersTable := `
-    CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        email TEXT NOT NULL UNIQUE,
-        password TEXT NOT NULL
-    );
-    `
-
-	_, err := DB.Exec(createUsersTable)
+	driver, err := postgres.WithInstance(DB, &postgres.Config{})
 	if err != nil {
-		utils.Logger.Error("Failed to create users table", "error", err)
-		panic("Could not create users table: " + err.Error())
+		utils.Logger.Error("Failed to create migration driver", "error", err)
+		panic("Could not create migration driver: " + err.Error())
 	}
 
-	createEventsTable := `
-    CREATE TABLE IF NOT EXISTS events (
-        id SERIAL PRIMARY KEY,
-        title TEXT NOT NULL,
-        description TEXT NOT NULL,
-        location TEXT NOT NULL,
-        date TIMESTAMP NOT NULL,
-        user_id INTEGER NOT NULL,
-        FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
-    );
-    `
+	migrationsPath := utils.GetEnvString("MIGRATIONS_PATH", "file://db/migrations")
 
-	_, err = DB.Exec(createEventsTable)
+	m, err := migrate.NewWithDatabaseInstance(
+		migrationsPath,
+		"postgres",
+		driver,
+	)
 	if err != nil {
-		utils.Logger.Error("Failed to create events table", "error", err)
-		panic("Could not create events table: " + err.Error())
+		utils.Logger.Error("Failed to initialize migrations", "error", err, "path", migrationsPath)
+		panic("Could not initialize migrations: " + err.Error())
 	}
 
-	createRegistrationsTable := `
-    CREATE TABLE IF NOT EXISTS registrations (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL,
-        event_id INTEGER NOT NULL,
-        FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
-        FOREIGN KEY(event_id) REFERENCES events(id) ON DELETE CASCADE,
-        UNIQUE(user_id, event_id)
-    );
-    `
-
-	_, err = DB.Exec(createRegistrationsTable)
-	if err != nil {
-		utils.Logger.Error("Failed to create registrations table", "error", err)
-		panic("Could not create registrations table: " + err.Error())
+	// Run migrations
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		utils.Logger.Error("Failed to run migrations", "error", err)
+		panic("Could not run migrations: " + err.Error())
 	}
 
-	utils.Logger.Info("Database tables initialized successfully")
+	if err == migrate.ErrNoChange {
+		utils.Logger.Info("No new migrations to apply")
+	} else {
+		utils.Logger.Info("Migrations applied successfully")
+	}
+
+	version, dirty, err := m.Version()
+	if err != nil && err != migrate.ErrNilVersion {
+		utils.Logger.Warn("Failed to get migration version", "error", err)
+	} else if err == nil {
+		utils.Logger.Info("Current migration version", "version", version, "dirty", dirty)
+	}
 }
