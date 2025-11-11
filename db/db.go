@@ -23,21 +23,38 @@ func InitDB() {
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
 		host, port, user, password, dbname, sslmode)
 
-	fmt.Printf("Connecting to database with connection string: %s\n", connStr)
+	utils.Logger.Debug("Connecting to database",
+		"host", host,
+		"port", port,
+		"database", dbname)
 
 	DB, err = sql.Open("postgres", connStr)
 
 	if err != nil {
+		utils.Logger.Error("Failed to open database connection", "error", err)
 		panic("Failed to connect to database: " + err.Error())
 	}
 
 	DB.SetMaxOpenConns(10)
 	DB.SetMaxIdleConns(5)
 
+	err = DB.Ping()
+	if err != nil {
+		utils.Logger.Error("Failed to ping database", "error", err)
+		panic("Could not ping database: " + err.Error())
+	}
+
+	utils.Logger.Info("Database connection established",
+		"host", host,
+		"port", port,
+		"database", dbname)
+
 	createTables()
 }
 
 func createTables() {
+	utils.Logger.Debug("Creating database tables if not exist")
+
 	createUsersTable := `
     CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -48,6 +65,7 @@ func createTables() {
 
 	_, err := DB.Exec(createUsersTable)
 	if err != nil {
+		utils.Logger.Error("Failed to create users table", "error", err)
 		panic("Could not create users table: " + err.Error())
 	}
 
@@ -65,6 +83,7 @@ func createTables() {
 
 	_, err = DB.Exec(createEventsTable)
 	if err != nil {
+		utils.Logger.Error("Failed to create events table", "error", err)
 		panic("Could not create events table: " + err.Error())
 	}
 
@@ -81,6 +100,9 @@ func createTables() {
 
 	_, err = DB.Exec(createRegistrationsTable)
 	if err != nil {
+		utils.Logger.Error("Failed to create registrations table", "error", err)
 		panic("Could not create registrations table: " + err.Error())
 	}
+
+	utils.Logger.Info("Database tables initialized successfully")
 }

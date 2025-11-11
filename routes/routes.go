@@ -6,6 +6,9 @@ import (
 )
 
 func RegisterRoutes(server *gin.Engine) {
+	// Add request logger middleware
+	server.Use(middlewares.RequestLogger())
+
 	server.POST("/users/signup", userSignupHandler)
 	server.POST("/users/login", userLoginHandler)
 
